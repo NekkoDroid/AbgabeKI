@@ -1,0 +1,15 @@
+### Python ###
+
+# Virtual environment
+/.venv/
+
+### Other Stuff ###
+
+# User-specific files
+*.user
+
+# Visual Studio Code cache/options directory
+.vscode/
+
+# JetBrains CLion cache/options directory
+.idea/

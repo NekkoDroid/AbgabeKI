@@ -1,0 +1,10 @@
+# Top level .editorconfig file used for this project used everywhere
+root = true
+
+#### General Formatting Options ####
+
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = tab
