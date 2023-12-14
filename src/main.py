@@ -1,6 +1,7 @@
 import tensorflow as tf
 
-if __name__ == '__main__':
+
+def main():
 	(train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
 
 	"""
@@ -45,3 +46,7 @@ if __name__ == '__main__':
 
 	"""Evaluate the trained model on the test dataset"""
 	model.evaluate(test_images, test_labels, verbose=2)
+
+
+if __name__ == '__main__':
+	main()
