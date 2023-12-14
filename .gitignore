@@ -3,6 +3,9 @@
 # Virtual environment
 /.venv/
 
+# Keras models
+*.keras
+
 ### Other Stuff ###
 
 # User-specific files
