@@ -52,6 +52,32 @@ class Connect4:
 		return False
 
 
+def play_compete(player1, player2):
+	board = Connect4()
+	players = [player1, player2]
+	player = 0
+	turns = 0
+
+	try:
+		while board.player is not None:
+			# because players are 1 and 2 subtract 1 to get the index
+			player = board.player - 1
+
+			# Count the number of turns
+			turns += 1
+
+			# Auto switches the board player index to the next
+			# Also passes the board and the number to which belongs to the player
+			if board.place(players[player].evaluate(board.board, player + 1)):
+				break
+
+	except OverflowError:
+		# When an exception is raised we need the other player
+		player = 1 if player == 0 else 0
+
+	return player, turns
+
+
 def main(model_path: Path):
 	(train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
 
