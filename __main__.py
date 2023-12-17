@@ -29,6 +29,8 @@ class Connect4:
 			if self.board[row][col] == 0:
 				return row
 
+		return None
+
 	def place(self, col):
 		if self.player is None:
 			raise PermissionError("Game already done")
@@ -37,7 +39,7 @@ class Connect4:
 			raise OverflowError(f"Column {col} does not exist")
 
 		row = self.get_open_row(col)
-		if not row:
+		if row is None:
 			raise OverflowError(f"Column {col} already full")
 
 		self.board[row][col] = self.player
