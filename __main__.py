@@ -1,6 +1,50 @@
 import tensorflow as tf
+import numpy as np
 
+from scipy.signal import convolve2d
 from pathlib import Path
+
+ROW_COUNT = 6
+COL_COUNT = 7
+
+HORIZONTAL_KERNEL = np.array([[1, 1, 1, 1]])
+VERTICAL_KERNEL = np.transpose(HORIZONTAL_KERNEL)
+DIAGONAL1_KERNEL = np.eye(4, dtype=np.uint8)
+DIAGONAL2_KERNEL = np.fliplr(DIAGONAL1_KERNEL)
+DETECTION_KERNELS = [
+	HORIZONTAL_KERNEL,
+	VERTICAL_KERNEL,
+	DIAGONAL1_KERNEL,
+	DIAGONAL2_KERNEL
+]
+
+
+class Connect4:
+	def __init__(self):
+		self.board = np.zeros((ROW_COUNT, COL_COUNT))
+		self.player = 1
+
+	def place(self, col):
+		if self.player is None:
+			raise PermissionError("Game already done")
+
+		if col >= COL_COUNT:
+			raise OverflowError(f"Column {col} does not exist")
+
+		for row in reversed(range(ROW_COUNT)):
+			if self.board[row][col] == 0:
+				self.board[row][col] = self.player
+
+				# https://stackoverflow.com/questions/29949169/how-to-implement-the-function-that-checks-for-a-win-in-a-python-based-connect-fo
+				for kernel in DETECTION_KERNELS:
+					if (convolve2d(self.board == self.player, kernel, mode='valid') == 4).any():
+						self.player = None
+						return True
+
+				self.player = 2 if self.player == 1 else 1
+				return False
+
+		raise OverflowError(f"Column {col} already full")
 
 
 def main(model_path: Path):
