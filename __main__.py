@@ -172,14 +172,14 @@ def evaluate_average_fitness(population: list[tf.keras.Model], games: int):
 	# TODO: Replace individual with actual connect 4 solver
 	individual = population[0]
 
+	player = Connect4Player(individual)
+	(player, turns) = play_compete(player, player)
+	print(f"Player {player} won in {turns} turns.")
+
 	for _ in range(games):
 		population_fitness = [check_fitness(i, individual) for i in population]
 		population_fittest = np.argmax(population_fitness)
 		average_fitness += population_fitness[population_fittest]
-
-	player = Connect4Player(individual)
-	(player, turns) = play_compete(player, player)
-	print(f"Player {player} won in {turns} turns.")
 
 	return average_fitness / games
 
