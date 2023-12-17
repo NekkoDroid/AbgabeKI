@@ -176,6 +176,10 @@ def evaluate_best_individuals(population: list[tf.keras.Model], games: int):
 		population_fittest = np.argmax(population_fitness)
 		average_fitness += population_fitness[population_fittest]
 
+	player = Connect4Player(individual)
+	(player, turns) = play_compete(player, player)
+	print(f"Player {player} won in {turns} turns.")
+
 	return average_fitness / games
 
 
