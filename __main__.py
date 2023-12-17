@@ -1,8 +1,8 @@
 import tensorflow as tf
 import numpy as np
+import random as rng
 
 from scipy.signal import convolve2d
-from pathlib import Path
 
 ROW_COUNT = 6
 COL_COUNT = 7
@@ -78,59 +78,127 @@ def play_compete(player1, player2):
 	return player, turns
 
 
-def main(model_path: Path):
-	(train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
+class Connect4Player:
+	def __init__(self, model: tf.keras.Model):
+		self.model = model
+		self.states = []
+		self.labels = []
 
-	"""
-	The images in the MNIST dataset have pixel values that range from [0, 255]
-	Reduce the pixel values to [0.0, 1.0) floating point numbers to give to the model
-	"""
-	train_images = train_images / 255.0
-	test_images = test_images / 255.0
+	def evaluate(self, board, self_num):
+		opponent = 2 if self_num == 1 else 1
 
-	if not model_path.exists():
-		"""
-		Sequential network models feed the results from one layer directly to the following layer
+		board_copy = np.copy(board)
+		board_copy[board == self_num] = 1
+		board_copy[board == opponent] = 2
+		board_copy /= 2.0  # Normalize th board to [0, 1]
 
-		Layers:
-			1 -> Flatten the image from a 28x28 2d-matrix to a 784 1d-matrix
-			2 -> Reduce the input to a fully connected 128 1d-matrix
-			3 -> Drop 20% of the input to prevent over-fitting to the training dataset
-			4 -> Reduce the output to 10 values mapping to the 10 labels of the dataset
-		"""
-		model = tf.keras.models.Sequential([
-			tf.keras.layers.Flatten(input_shape=train_images.shape[1:]),
-			tf.keras.layers.Dense(128, activation=tf.keras.activations.relu),
-			tf.keras.layers.Dropout(0.2),
-			tf.keras.layers.Dense(10, activation=tf.keras.activations.softmax),
-		])
+		prediction = np.argmax(self.model(board_copy.reshape((1, ROW_COUNT, COL_COUNT))))
+		self.states.append(board_copy)
+		self.labels.append(prediction)
+		return prediction
 
-		"""
-		Compile the model with certain settings during the training:
-		optimizer: <I-couldn't-figure-out-what-the-fuck-this-is-used-for>
-		loss: Calculates the loss (how wrong) of the model during training
-		metrics: Used to decides how the results should be evaluated (relates to 'loss')
-		"""
-		model.compile(
+
+def check_fitness(model: tf.keras.Model, opponent: tf.keras.Model) -> float:
+	model_player = Connect4Player(model)
+	opponent_player = Connect4Player(opponent)
+	(winner, turns) = play_compete(model_player, opponent_player)
+
+	# When winning give values above 1, but reward shorter games (shorter -> higher value)
+	fitness = (ROW_COUNT * COL_COUNT) / turns
+
+	# When losing give values below 1, but reward longer games (longer -> higher value)
+	if winner == 1:
+		fitness = turns / (ROW_COUNT * COL_COUNT)
+
+	return fitness
+
+
+def create_neural_network():
+	return tf.keras.models.Sequential([
+		tf.keras.layers.Flatten(input_shape=(ROW_COUNT, COL_COUNT)),
+		tf.keras.layers.Dense(128, activation=tf.keras.activations.relu),
+		tf.keras.layers.Dropout(0.2),
+		tf.keras.layers.Dense(7, activation=tf.keras.activations.softmax),
+	])
+
+
+GAMES_FOR_AVERAGE = 10
+GENERATIONS = 100
+POPULATION = 100
+MUTATION_RATE = 0.1
+
+
+def mutate(model: tf.keras.Model):
+	for layer in model.layers:
+		if np.random.rand() < MUTATION_RATE:
+			layer.set_weights([weight + 0.1 * np.random.randn(*weight.shape) for weight in layer.get_weights()])
+
+
+def crossover(parents: list[tf.keras.Model]) -> tf.keras.Model:
+	child = create_neural_network()
+
+	for i, parent_layers in enumerate(zip([parent.layers for parent in parents])):
+		child.layers[i].set_weights(rng.choice(parent_layers)[i].get_weights())
+
+	return child
+
+
+def train_neural_network(population: list[tf.keras.Model], games: int, epochs: int):
+	for individual in population:
+
+		player = Connect4Player(individual)
+		for _ in range(games):
+			play_compete(player, player)
+
+		individual.compile(
 			optimizer=tf.keras.optimizers.Adam(),
 			loss=tf.keras.losses.SparseCategoricalCrossentropy(),
 			metrics=[
 				tf.keras.metrics.SparseCategoricalAccuracy(),
 			]
 		)
+		states = np.array(player.states)
+		labels = np.array(player.labels)
 
-		"""Train the model on the training dataset"""
-		model.fit(train_images, train_labels, epochs=5)
+		individual.fit(states, labels, epochs=epochs)
 
-		"""Serialize the model to be loaded later again"""
-		model.save(model_path)
 
-	"""Deserialize a previously save model"""
-	model = tf.keras.models.load_model(model_path)
+def evaluate_best_individuals(population: list[tf.keras.Model], games: int):
+	average_fitness = 0
 
-	"""Evaluate the trained model on the test dataset"""
-	model.evaluate(test_images, test_labels, verbose=2)
+	individual = population[0]
+
+	for _ in range(games):
+		population_fitness = [check_fitness(i, individual) for i in population]
+		population_fittest = np.argmax(population_fitness)
+		average_fitness += population_fitness[population_fittest]
+
+	return average_fitness / games
+
+
+def main():
+	population = [create_neural_network() for _ in range(POPULATION)]
+
+	for generation in range(GENERATIONS):
+		fitness_scores = [check_fitness(individual, rng.choice(population)) for individual in population]
+
+		selected_indices = np.argsort(fitness_scores)[-POPULATION // 2:]
+		selected_population = [population[i] for i in selected_indices]
+
+		while len(selected_population) < POPULATION:
+			child = crossover([
+				population[rng.choice(selected_indices)],
+				population[rng.choice(selected_indices)],
+			])
+			mutate(child)
+			selected_population.append(child)
+
+		population = selected_population
+		train_neural_network(population, 100, 10)
+
+		average_fitness = evaluate_best_individuals(population, GAMES_FOR_AVERAGE)
+		print(f"Generation {generation + 1}, Average Fitness: {average_fitness}")
 
 
 if __name__ == '__main__':
-	main(Path("./model.keras"))
+	main()
