@@ -90,7 +90,6 @@ class Connect4Player:
 		board_copy = np.copy(board)
 		board_copy[board == self_num] = 1
 		board_copy[board == opponent] = 2
-		board_copy /= 2.0  # Normalize th board to [0, 1]
 
 		prediction = np.argmax(self.model(board_copy.reshape((1, ROW_COUNT, COL_COUNT))))
 		self.states.append(board_copy)
@@ -115,10 +114,12 @@ def check_fitness(model: tf.keras.Model, opponent: tf.keras.Model) -> float:
 
 def create_neural_network():
 	return tf.keras.models.Sequential([
-		tf.keras.layers.Flatten(input_shape=(ROW_COUNT, COL_COUNT)),
+		tf.keras.layers.Input(shape=(ROW_COUNT, COL_COUNT)),
+		tf.keras.layers.Rescaling(1 / 2),
+		tf.keras.layers.Flatten(),
 		tf.keras.layers.Dense(128, activation=tf.keras.activations.relu),
 		tf.keras.layers.Dropout(0.2),
-		tf.keras.layers.Dense(7, activation=tf.keras.activations.softmax),
+		tf.keras.layers.Dense(ROW_COUNT, activation=tf.keras.activations.softmax),
 	])
 
 
