@@ -24,6 +24,11 @@ class Connect4:
 		self.board = np.zeros((ROW_COUNT, COL_COUNT))
 		self.player = 1
 
+	def get_open_row(self, col):
+		for row in reversed(range(ROW_COUNT)):
+			if self.board[row][col] == 0:
+				return row
+
 	def place(self, col):
 		if self.player is None:
 			raise PermissionError("Game already done")
@@ -31,20 +36,20 @@ class Connect4:
 		if col >= COL_COUNT:
 			raise OverflowError(f"Column {col} does not exist")
 
-		for row in reversed(range(ROW_COUNT)):
-			if self.board[row][col] == 0:
-				self.board[row][col] = self.player
+		row = self.get_open_row(col)
+		if not row:
+			raise OverflowError(f"Column {col} already full")
 
-				# https://stackoverflow.com/questions/29949169/how-to-implement-the-function-that-checks-for-a-win-in-a-python-based-connect-fo
-				for kernel in DETECTION_KERNELS:
-					if (convolve2d(self.board == self.player, kernel, mode='valid') == 4).any():
-						self.player = None
-						return True
+		self.board[row][col] = self.player
 
-				self.player = 2 if self.player == 1 else 1
-				return False
+		# https://stackoverflow.com/questions/29949169/how-to-implement-the-function-that-checks-for-a-win-in-a-python-based-connect-fo
+		for kernel in DETECTION_KERNELS:
+			if (convolve2d(self.board == self.player, kernel, mode='valid') == 4).any():
+				self.player = None
+				return True
 
-		raise OverflowError(f"Column {col} already full")
+		self.player = 2 if self.player == 1 else 1
+		return False
 
 
 def main(model_path: Path):
