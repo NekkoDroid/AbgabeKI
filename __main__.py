@@ -166,7 +166,7 @@ def train_neural_network(population: list[tf.keras.Model], games: int, epochs: i
 		individual.fit(states, labels, epochs=epochs)
 
 
-def evaluate_best_individuals(population: list[tf.keras.Model], games: int):
+def evaluate_average_fitness(population: list[tf.keras.Model], games: int):
 	average_fitness = 0
 
 	# TODO: Replace individual with actual connect 4 solver
@@ -204,7 +204,7 @@ def main():
 		population = selected_population
 		#train_neural_network(population, 100, 10)
 
-		average_fitness = evaluate_best_individuals(population, GAMES_FOR_AVERAGE)
+		average_fitness = evaluate_average_fitness(population, GAMES_FOR_AVERAGE)
 		print(f"Generation {generation + 1}, Average Fitness: {average_fitness}")
 
 
