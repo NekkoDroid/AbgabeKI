@@ -81,7 +81,7 @@ def play_compete(player1, player2):
 
 
 class Connect4Player:
-	def __init__(self, model: tf.keras.Model):
+	def __init__(self, model):
 		self.model = model
 		self.states = []
 		self.labels = []
@@ -99,7 +99,7 @@ class Connect4Player:
 		return prediction
 
 
-def check_fitness(model: tf.keras.Model, opponent: tf.keras.Model) -> float:
+def check_fitness(model, opponent) -> float:
 	model_player = Connect4Player(model)
 	opponent_player = Connect4Player(opponent)
 	(winner, turns) = play_compete(model_player, opponent_player)
@@ -166,18 +166,23 @@ def train_neural_network(population: list[tf.keras.Model], games: int, epochs: i
 		individual.fit(states, labels, epochs=epochs)
 
 
+def random_valid_column(board):
+	connect4 = Connect4()
+	connect4.board = np.copy(board[0])
+
+	valid_moves = list(filter(lambda col: connect4.get_open_row(col) is not None, range(COL_COUNT)))
+	index = rng.choice(valid_moves) if len(valid_moves) > 0 else 0  # Return 0 when no valid moves, we lose these
+
+	categories = [0] * COL_COUNT
+	categories[index] = 1
+	return categories
+
+
 def evaluate_average_fitness(population: list[tf.keras.Model], games: int):
 	average_fitness = 0
 
-	# TODO: Replace individual with actual connect 4 solver
-	individual = population[0]
-
-	player = Connect4Player(individual)
-	(player, turns) = play_compete(player, player)
-	print(f"Player {player} won in {turns} turns.")
-
 	for _ in range(games):
-		population_fitness = [check_fitness(i, individual) for i in population]
+		population_fitness = [check_fitness(i, random_valid_column) for i in population]
 		population_fittest = np.argmax(population_fitness)
 		average_fitness += population_fitness[population_fittest]
 
