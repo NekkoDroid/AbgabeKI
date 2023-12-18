@@ -54,7 +54,7 @@ class Connect4:
 		return False
 
 
-def play_compete(player1, player2):
+def play_compete(player1, player2, output=False):
 	board = Connect4()
 	players = [player1, player2]
 	player = 0
@@ -70,12 +70,19 @@ def play_compete(player1, player2):
 
 			# Auto switches the board player index to the next
 			# Also passes the board and the number to which belongs to the player
-			if board.place(players[player].evaluate(board.board, player + 1)):
+			col = players[player].evaluate(board.board, player + 1)
+			if output:
+				print(f"Player {player} placing in column {col} and row {board.get_open_row(col)}")
+
+			if board.place(col):
 				break
 
 	except OverflowError:
 		# When an exception is raised we need the other player
 		player = 1 if player == 0 else 0
+
+	if output:
+		print(board.board)
 
 	return player, turns
 
@@ -197,6 +204,10 @@ def main():
 
 		selected_indices = np.argsort(fitness_scores)[-POPULATION // 2:]
 		selected_population = [population[i] for i in selected_indices]
+
+		print(f"Competing individual {selected_indices[0]} against random placement")
+		winner, turns = play_compete(Connect4Player(selected_population[0]), Connect4Player(random_valid_column), True)
+		print(f"Winner: Player {winner} ({turns} turns)")
 
 		while len(selected_population) < POPULATION:
 			child = crossover([
