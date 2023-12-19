@@ -78,3 +78,9 @@ aufsteigend sortiert und die bessere Hälfte wird in die nächste Generation üb
 das Kreuzen von 2 zufälligen Eltern der übernommenen Population ersetzt. Beim Kreuzen werden die Weights zufällig von
 einem Elternteil ausgewählt und nachdem das Model besteht werden die einzelnen Weights, wenn sie eine bestimmte
 Wahrscheinlichkeit zutrifft, um einen zufälligen Wert um der Standard Normalverteilung positive oder negative mutiert.
+
+Daraufhin wird die neue Generation trainiert (dies wurde jedoch ausgelassen, da ein gescheiter Gegner fehlte). Hierbei
+sollte jedes Individuum gegen den Minimax algorithmus antreten und die Spielzüge des Minimax als training data benutzen.
+Letztlich wird noch die durchschnittliche fitness der besten individuen über X spiele errechnet, dies hat jedoch
+vermutlich ein Problem, da dessen Resultat nahezu immer 6.0 beträgt, welches das Maximum an fitness ist (es wird immer
+innerhalb von 7 Zügen gewonnen).
