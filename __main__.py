@@ -200,7 +200,7 @@ def main():
 	population = [create_neural_network() for _ in range(POPULATION)]
 
 	for generation in range(GENERATIONS):
-		fitness_scores = [check_fitness(individual, rng.choice(population)) for individual in population]
+		fitness_scores = [check_fitness(individual, random_valid_column) for individual in population]
 
 		selected_indices = np.argsort(fitness_scores)[-POPULATION // 2:]
 		selected_population = [population[i] for i in selected_indices]
