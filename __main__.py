@@ -53,6 +53,11 @@ class Connect4:
 		self.player = 2 if self.player == 1 else 1
 		return False
 
+	def clone(self):
+		copy = Connect4()
+		copy.board = np.copy(self.board)
+		copy.player = self.player
+
 
 def play_compete(player1, player2, output=False):
 	board = Connect4()
@@ -185,6 +190,11 @@ def random_valid_column(board):
 	return categories
 
 
+def minimax_model(board):
+	connect4 = Connect4()
+	connect4.board = np.copy(board[0])
+
+
 def evaluate_average_fitness(population: list[tf.keras.Model], games: int):
 	average_fitness = 0
 
@@ -205,8 +215,8 @@ def main():
 		selected_indices = np.argsort(fitness_scores)[-POPULATION // 2:]
 		selected_population = [population[i] for i in selected_indices]
 
-		print(f"Competing individual {selected_indices[0]} against random placement")
-		winner, turns = play_compete(Connect4Player(selected_population[0]), Connect4Player(random_valid_column), True)
+		print(f"Competing individual {selected_indices[-1]} against random placement")
+		winner, turns = play_compete(Connect4Player(selected_population[-1]), Connect4Player(random_valid_column), True)
 		print(f"Winner: Player {winner} ({turns} turns)")
 
 		while len(selected_population) < POPULATION:
